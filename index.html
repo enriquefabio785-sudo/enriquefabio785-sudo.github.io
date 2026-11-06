@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consejo de Seguridad de la ONU - Producto Interactivo</title>
+<style>
+  :root {
+    --bg: #f4f6f9; --texto: #1a1a2e; --card: #ffffff; --azul: #1e5aa8;
+    --azul-osc: #0a2a5e; --rojo: #c62828; --verde: #1b7a3e; --gris: #555;
+    --sombra: 0 4px 14px rgba(0,0,0,0.08);
+  }
+  body.oscuro {
+    --bg: #0f1722; --texto: #e6edf5; --card: #1a2635; --azul: #4a9eff;
+    --azul-osc: #0a1a2e; --gris: #a0b0c0;
+    --sombra: 0 4px 14px rgba(0,0,0,0.4);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+  body { background: var(--bg); color: var(--texto); line-height: 1.6; transition: background 0.3s, color 0.3s; }
+
+  header {
+    background: linear-gradient(135deg, var(--azul-osc), var(--azul));
+    color: white; padding: 60px 20px 50px; text-align: center; position: relative;
+  }
+  header h1 { font-size: 2.2rem; margin-bottom: 10px; }
+  header p { font-size: 1.1rem; opacity: 0.9; max-width: 700px; margin: 0 auto; }
+
+  .toggle-modo {
+    position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4); color: white; padding: 8px 14px;
+    border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+    transition: background 0.2s;
+  }
+  .toggle-modo:hover { background: rgba(255,255,255,0.35); }
+
+  section { max-width: 1000px; margin: 0 auto; padding: 50px 20px; }
+  h2 { color: var(--azul-osc); margin-bottom: 20px; font-size: 1.7rem; border-left: 5px solid var(--azul); padding-left: 12px; }
+  body.oscuro h2 { color: var(--azul); }
+
+  /* Guía de estudio */
+  .guia { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+  .guia-card {
+    background: var(--card); border-radius: 12px; padding: 24px;
+    box-shadow: var(--sombra); border-top: 4px solid var(--azul);
+  }
+  .guia-card h3 { color: var(--azul); margin-bottom: 12px; font-size: 1.15rem; }
+  .guia-card ul { padding-left: 18px; }
+  .guia-card li { margin-bottom: 8px; font-size: 0.95rem; }
+  .guia-card strong { color: var(--azul-osc); }
+  body.oscuro .guia-card strong { color: var(--azul); }
+
+  /* Tarjetas flip */
+  .flip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-top: 20px; }
+  .flip-card { perspective: 1000px; height: 200px; cursor: pointer; }
+  .flip-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
+  .flip-card.volteada .flip-inner { transform: rotateY(180deg); }
+  .flip-front, .flip-back {
+    position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+    border-radius: 12px; padding: 16px; box-shadow: var(--sombra);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; background: var(--card);
+  }
+  .flip-front .bandera { font-size: 2.8rem; }
+  .flip-front .nombre { font-weight: 700; margin-top: 8px; color: var(--azul-osc); }
+  body.oscuro .flip-front .nombre { color: var(--azul); }
+  .flip-front .pista { font-size: 0.75rem; color: var(--gris); margin-top: 6px; }
+  .flip-back { transform: rotateY(180deg); font-size: 0.8rem; background: var(--azul-osc); color: white; }
+  body.oscuro .flip-back { background: var(--azul); color: #0f1722; }
+
+  .no-perm { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
+  .np { background: var(--card); border-radius: 8px; padding: 12px; text-align: center; font-size: 0.9rem; box-shadow: var(--sombra); border-top: 3px solid var(--azul); }
+
+  /* Simulador */
+  .simulador { background: var(--card); border-radius: 12px; padding: 30px; box-shadow: var(--sombra); }
+  .control-votos { display: flex; flex-direction: column; gap: 15px; margin: 20px 0; }
+  .control-votos label { font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .control-votos input[type=range] { width: 100%; accent-color: var(--azul); }
+  .votos-visual { display: flex; gap: 6px; flex-wrap: wrap; margin: 15px 0; min-height: 50px; }
+  .voto-punto { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: white; }
+  .voto-punto.si { background: var(--verde); }
+  .voto-punto.no { background: var(--rojo); }
+  .voto-punto.veto { background: #000; border: 2px solid gold; }
+
+  .botones-veto { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+  .btn {
+    padding: 12px 18px; border: none; border-radius: 8px; cursor: pointer;
+    background: var(--azul); color: white; font-weight: 600; transition: all 0.2s; font-size: 0.95rem;
+  }
+  .btn:hover { filter: brightness(1.15); transform: translateY(-2px); }
+  .btn.rojo { background: var(--rojo); }
+  .btn.verde { background: var(--verde); }
+  .btn.gris { background: #666; }
+  .btn.whatsapp { background: #25D366; color: white; }
+
+  .resultado {
+    margin-top: 20px; padding: 18px; border-radius: 8px; font-weight: 600;
+    display: none; text-align: center; font-size: 1.05rem; animation: aparecer 0.4s;
+  }
+  .resultado.aprobada { background: #e3f5e9; color: var(--verde); border: 1px solid var(--verde); display: block; }
+  .resultado.rechazada { background: #fdecec; color: var(--rojo); border: 1px solid var(--rojo); display: block; }
+  @keyframes aparecer { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+  /* Contador */
+  .contador { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px; }
+  .contador-box { flex: 1; min-width: 180px; background: var(--card); border-radius: 12px; padding: 22px; text-align: center; box-shadow: var(--sombra); }
+  .contador-num { font-size: 2.6rem; font-weight: 700; color: var(--rojo); }
+  .contador-label { font-size: 0.95rem; color: var(--gris); margin-top: 5px; }
+
+  /* Timeline con filtros */
+  .filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .filtro {
+    padding: 7px 14px; border-radius: 20px; border: 1px solid var(--azul);
+    background: transparent; color: var(--azul); cursor: pointer; font-size: 0.85rem; font-weight: 600;
+  }
+  .filtro.activo { background: var(--azul); color: white; }
+  .timeline { position: relative; margin-top: 10px; padding-left: 30px; }
+  .timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 3px; background: var(--azul); border-radius: 2px; }
+  .evento { position: relative; margin-bottom: 22px; background: var(--card); padding: 16px 18px; border-radius: 10px; box-shadow: var(--sombra); animation: aparecer 0.4s; }
+  .evento.oculto { display: none; }
+  .evento::before { content: ''; position: absolute; left: -27px; top: 20px; width: 14px; height: 14px; border-radius: 50%; background: var(--azul); border: 3px solid var(--bg); box-shadow: 0 0 0 2px var(--azul); }
+  .evento .anio { font-weight: 700; color: var(--rojo); font-size: 0.95rem; }
+  .evento .titulo { font-weight: 600; margin: 4px 0; color: var(--azul-osc); }
+  body.oscuro .evento .titulo { color: var(--azul); }
+  .evento .autor { font-size: 0.75rem; color: var(--gris); margin-top: 6px; font-style: italic; }
+
+  /* Reto diplomático */
+  .reto { background: var(--card); border-radius: 12px; padding: 30px; box-shadow: var(--sombra); }
+  .reto .escenario { font-size: 1.05rem; margin-bottom: 20px; padding: 15px; background: rgba(30,90,168,0.1); border-left: 4px solid var(--azul); border-radius: 6px; }
+  .reto .opciones-reto { display: flex; gap: 10px; flex-wrap: wrap; }
+  .consecuencia { margin-top: 15px; padding: 15px; border-radius: 8px; font-size: 0.95rem; display: none; animation: aparecer 0.4s; }
+  .consecuencia.visible { display: block; }
+  .consecuencia.bien { background: #e3f5e9; color: var(--verde); border: 1px solid var(--verde); }
+  .consecuencia.mal { background: #fdecec; color: var(--rojo); border: 1px solid var(--rojo); }
+
+  /* Quiz con progreso */
+  .progreso-wrap { background: #ddd; border-radius: 10px; height: 12px; margin-bottom: 20px; overflow: hidden; }
+  body.oscuro .progreso-wrap { background: #2a3a4a; }
+  .progreso-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--azul), var(--verde)); transition: width 0.4s; }
+  .puntaje { text-align: center; font-weight: 600; margin-bottom: 15px; color: var(--gris); }
+  .quiz { background: var(--card); border-radius: 12px; padding: 30px; box-shadow: var(--sombra); }
+  .pregunta { margin-bottom: 25px; }
+  .pregunta p { font-weight: 600; margin-bottom: 10px; }
+  .opciones { display: flex; flex-direction: column; gap: 8px; }
+  .opcion { padding: 10px 14px; border: 1px solid #ccd6e0; border-radius: 8px; background: transparent; color: var(--texto); cursor: pointer; text-align: left; transition: all 0.2s; }
+  .opcion:hover { background: rgba(30,90,168,0.1); }
+  .opcion.correcta { background: #e3f5e9; border-color: var(--verde); color: var(--verde); }
+  .opcion.incorrecta { background: #fdecec; border-color: var(--rojo); color: var(--rojo); }
+  .feedback { margin-top: 8px; font-size: 0.9rem; font-weight: 600; display: none; }
+  .feedback.ok { color: var(--verde); display: block; }
+  .feedback.mal { color: var(--rojo); display: block; }
+  .resultado-quiz { margin-top: 20px; padding: 20px; border-radius: 10px; text-align: center; font-weight: 700; font-size: 1.1rem; display: none; }
+  .resultado-quiz.visible { display: block; }
+  .resultado-quiz.excelente { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #5a3a00; }
+  .resultado-quiz.bien { background: #e3f5e9; color: var(--verde); }
+  .resultado-quiz.mal { background: #fdecec; color: var(--rojo); }
+
+  /* Compartir */
+  .compartir { text-align: center; margin-top: 20px; }
+  .compartir .btn { font-size: 1rem; padding: 14px 24px; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%) translateY(100px);
+    background: var(--azul-osc); color: white; padding: 14px 22px; border-radius: 30px;
+    font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.3); opacity: 0;
+    transition: all 0.4s; z-index: 999; max-width: 90%; text-align: center;
+  }
+  .toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .toast.rojo { background: var(--rojo); }
+  .toast.verde { background: var(--verde); }
+  .toast.oro { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #5a3a00; }
+
+  /* Insignia */
+  .insignia {
+    position: fixed; top: 80px; right: 15px; background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #5a3a00; padding: 12px 18px; border-radius: 30px; font-weight: 700;
+    box-shadow: 0 6px 20px rgba(255,170,0,0.5); opacity: 0; transform: scale(0.5);
+    transition: all 0.5s; z-index: 998; font-size: 0.9rem;
+  }
+  .insignia.visible { opacity: 1; transform: scale(1); }
+
+  footer { background: var(--azul-osc); color: #cfd8e3; text-align: center; padding: 25px 20px; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="toggle-modo" onclick="toggleModo()" id="btnModo">🌙 Modo oscuro</button>
+  <h1>Consejo de Seguridad de la ONU</h1>
+  <p>Explora, veta, aprende. Un producto interactivo sobre el órgano que decide sobre la paz mundial.</p>
+</header>
+
+<!-- GUÍA DE ESTUDIO AMPLIADA -->
+<section>
+  <h2>📖 Guía de estudio: todo lo que necesitas saber</h2>
+  <p style="margin-bottom:20px;">Lee esta guía antes de hacer el quiz. Todas las respuestas están aquí.</p>
+  <div class="guia">
+    <div class="guia-card">
+      <h3>🏛️ ¿Qué es el Consejo de Seguridad?</h3>
+      <ul>
+        <li>Es uno de los <strong>6 órganos principales</strong> de la ONU.</li>
+        <li>Su responsabilidad principal es <strong>mantener la paz y la seguridad internacionales</strong>.</li>
+        <li>Tiene <strong>15 miembros</strong>: 5 permanentes y 10 no permanentes.</li>
+        <li>Sus decisiones son <strong>vinculantes</strong> (obligatorias) para todos los Estados Miembros.</li>
+        <li>Fue creado en <strong>1945</strong> con la Carta de las Naciones Unidas.</li>
+      </ul>
+    </div>
+    <div class="guia-card">
+      <h3>👑 Miembros permanentes</h3>
+      <ul>
+        <li>Son <strong>5</strong>: China, Francia, Rusia, Reino Unido y Estados Unidos.</li>
+        <li>Tienen derecho de <strong>veto</strong> desde 1945.</li>
+        <li>El veto significa que <strong>un solo voto negativo</strong> bloquea cualquier resolución.</li>
+        <li>Rusia (como URSS) es el país que <strong>más vetos</strong> ha usado en la historia.</li>
+        <li>EE. UU. ha usado el veto principalmente para proteger a Israel.</li>
+      </ul>
+    </div>
+    <div class="guia-card">
+      <h3>🗳️ Miembros no permanentes</h3>
+      <ul>
+        <li>Son <strong>10</strong> miembros.</li>
+        <li>Son elegidos por la <strong>Asamblea General</strong>.</li>
+        <li>Su mandato dura <strong>2 años</strong>.</li>
+        <li><strong>No tienen derecho de veto</strong>.</li>
+        <li>Se eligen por representación geográfica equitativa.</li>
+      </ul>
+    </div>
+    <div class="guia-card">
+      <h3>⚖️ Reglas de votación</h3>
+      <ul>
+        <li>Se necesitan al menos <strong>9 votos a favor</strong> de los 15 para aprobar una resolución.</li>
+        <li>Si un permanente vota <strong>NO</strong>, la resolución se <strong>rechaza</strong> (veto).</li>
+        <li>Si un permanente se <strong>abstiene</strong>, NO cuenta como veto: la resolución puede aprobarse si llega a 9 votos.</li>
+        <li>Las <strong>abstenciones</strong> no bloquean.</li>
+        <li>El veto solo lo pueden usar los <strong>5 permanentes</strong>.</li>
+      </ul>
+    </div>
+    <div class="guia-card">
+      <h3>🛠️ ¿Qué puede hacer el Consejo?</h3>
+      <ul>
+        <li>Imponer <strong>sanciones</strong> económicas o diplomáticas.</li>
+        <li>Autorizar el <strong>uso de la fuerza</strong> militar.</li>
+        <li>Crear <strong>misiones de paz</strong> (cascos azules).</li>
+        <li>Establecer <strong>tribunales internacionales</strong>.</li>
+        <li>Declarar situaciones como <strong>amenaza a la paz</strong>.</li>
+      </ul>
+    </div>
+    <div class="guia-card">
+      <h3>📜 Datos clave para el quiz</h3>
+      <ul>
+        <li>Total de miembros: <strong>15</strong>.</li>
+        <li>Permanentes: <strong>5</strong>.</li>
+        <li>No permanentes: <strong>10</strong>.</li>
+        <li>Votos necesarios: <strong>9</strong>.</li>
+        <li>Duración mandato no permanente: <strong>2 años</strong>.</li>
+        <li>Año de creación: <strong>1945</strong>.</li>
+        <li>La abstención de un permanente: <strong>NO es veto</strong>.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Los 5 permanentes: toca para descubrir</h2>
+  <p>Toca cada tarjeta para voltearla y conocer su papel.</p>
+  <div class="flip-grid" id="flipGrid"></div>
+</section>
+
+<section>
+  <h2>Miembros no permanentes (ejemplo de período)</h2>
+  <p>Elegidos por 2 años. No tienen derecho de veto.</p>
+  <div class="no-perm" id="noPerm"></div>
+</section>
+
+<section>
+  <h2>El veto en números</h2>
+  <div class="contador">
+    <div class="contador-box">
+      <div class="contador-num" id="contVetos">0</div>
+      <div class="contador-label">Vetos ejercidos por ti</div>
+    </div>
+    <div class="contador-box">
+      <div class="contador-num" id="contPaises">0</div>
+      <div class="contador-label">Países que has usado</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>🎮 Simulador de votación</h2>
+  <div class="simulador">
+    <p>Ajusta los votos y decide si algún permanente veta. Observa el resultado en tiempo real.</p>
+    <div class="control-votos">
+      <label>Votos a favor: <span id="lblSi">9</span></label>
+      <input type="range" min="0" max="14" value="9" id="rangeSi">
+      <label>Votos en contra: <span id="lblNo">6</span></label>
+      <input type="range" min="0" max="14" value="6" id="rangeNo">
+    </div>
+    <div class="votos-visual" id="votosVisual"></div>
+    <p style="margin-top:10px;font-weight:600;">¿Algún miembro permanente veta?</p>
+    <div class="botones-veto" id="botonesVeto"></div>
+    <div class="resultado" id="resultado"></div>
+    <div style="margin-top:15px;">
+      <button class="btn gris" onclick="reiniciarSimulador()">🔄 Reiniciar</button>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>🎯 Reto diplomático</h2>
+  <div class="reto">
+    <div class="escenario" id="escenarioReto"></div>
+    <div class="opciones-reto" id="opcionesReto"></div>
+    <div class="consecuencia" id="consecuenciaReto"></div>
+  </div>
+</section>
+
+<section>
+  <h2>Línea de tiempo: vetos famosos</h2>
+  <div class="filtros" id="filtros"></div>
+  <div class="timeline" id="timeline"></div>
+</section>
+
+<section>
+  <h2>🏆 Quiz final (10 preguntas)</h2>
+  <div class="quiz">
+    <div class="progreso-wrap"><div class="progreso-bar" id="progresoBar"></div></div>
+    <div class="puntaje" id="puntaje">Aciertos: 0 / 10</div>
+    <div id="quiz"></div>
+    <div class="resultado-quiz" id="resultadoQuiz"></div>
+  </div>
+</section>
+
+<!-- COMPARTIR -->
+<section>
+  <div class="compartir">
+    <h2 style="border:none;text-align:center;">📤 Comparte este producto</h2>
+    <p style="margin-bottom:15px;">Envía el enlace a tus compañeros o profesor por WhatsApp.</p>
+    <button class="btn whatsapp" onclick="compartirWhatsApp()">💬 Compartir por WhatsApp</button>
+  </div>
+</section>
+
+<footer>Producto interactivo educativo · Consejo de Seguridad de la ONU · Elaborado con fines académicos</footer>
+
+<div class="toast" id="toast"></div>
+<div class="insignia" id="insignia">🏅 ¡Diplomático experto!</div>
+
+<script>
+// ---------- DATOS ----------
+const permanentes = [
+  { nombre: "China", bandera: "🇨🇳", info: "Miembro permanente desde 1945. Usa el veto para proteger su soberanía y su visión de no intervención." },
+  { nombre: "Francia", bandera: "🇫🇷", info: "Permanente desde 1945. Propone regular el veto en casos de atrocidades masivas." },
+  { nombre: "Rusia", bandera: "🇷🇺", info: "Permanente (como URSS desde 1945). El país que más vetos ha usado en la historia reciente." },
+  { nombre: "Reino Unido", bandera: "🇬🇧", info: "Permanente desde 1945. Suele alinearse con EE. UU. y Francia." },
+  { nombre: "Estados Unidos", bandera: "🇺🇸", info: "Permanente desde 1945. Ha vetado resoluciones críticas con Israel." }
+];
+
+const noPermanentes = ["Brasil", "Japón", "Alemania", "India", "México", "Kenia", "Emiratos Árabes Unidos", "Gabón", "Ghana", "Albania"];
+
+const vetosFamosos = [
+  { anio: "1946", titulo: "Primer veto de la historia", texto: "La URSS ejerce el primer veto sobre la cuestión de España.", autor: "URSS" },
+  { anio: "1972", titulo: "Veto de EE. UU. sobre Oriente Medio", texto: "EE. UU. veta una resolución que condenaba acciones militares en la región.", autor: "EE. UU." },
+  { anio: "2011", titulo: "Veto sobre Siria", texto: "China y Rusia vetan sanciones al gobierno sirio por represión de protestas.", autor: "China y Rusia" },
+  { anio: "2014", titulo: "Veto ruso sobre Crimea", texto: "Rusia veta una resolución que declaraba inválido el referéndum de Crimea.", autor: "Rusia" },
+  { anio: "2022", titulo: "Veto ruso tras invasión de Ucrania", texto: "Rusia veta una resolución que exigía el cese de la ofensiva militar.", autor: "Rusia" },
+  { anio: "2023", titulo: "Veto de EE. UU. sobre Gaza", texto: "EE. UU. veta una resolución que pedía un alto el fuego humanitario en Gaza.", autor: "EE. UU." }
+];
+
+// ---------- ESTADO GLOBAL ----------
+let totalVetos = 0;
+const paisesQueVetaron = new Set();
+let vetosSimulador = [];
+let puntajeQuiz = 0;
+let quizCompletado = false;
+let timelineVista = false;
+let retoCompletado = false;
+let insigniaMostrada = false;
+
+function guardar() {
+  localStorage.setItem("cs_onu", JSON.stringify({
+    totalVetos, paises: [...paisesQueVetaron], puntajeQuiz, quizCompletado, timelineVista, retoCompletado, insigniaMostrada
+  }));
+}
+function cargar() {
+  try {
+    const d = JSON.parse(localStorage.getItem("cs_onu"));
+    if (d) {
+      totalVetos = d.totalVetos || 0;
+      (d.paises || []).forEach(p => paisesQueVetaron.add(p));
+      puntajeQuiz = d.puntajeQuiz || 0;
+      quizCompletado = d.quizCompletado || false;
+      timelineVista = d.timelineVista || false;
+      retoCompletado = d.retoCompletado || false;
+      insigniaMostrada = d.insigniaMostrada || false;
+    }
+  } catch(e) {}
+}
+
+// ---------- TOAST ----------
+function toast(msg, tipo = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast visible " + tipo;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = "toast " + tipo, 3000);
+}
+
+// ---------- MODO OSCURO ----------
+function toggleModo() {
+  document.body.classList.toggle("oscuro");
+  const osc = document.body.classList.contains("oscuro");
+  document.getElementById("btnModo").textContent = osc ? "☀️ Modo claro" : "🌙 Modo oscuro";
+  localStorage.setItem("cs_modo", osc ? "oscuro" : "claro");
+}
+if (localStorage.getItem("cs_modo") === "oscuro") {
+  document.body.classList.add("oscuro");
+  document.getElementById("btnModo").textContent = "☀️ Modo claro";
+}
+
+// ---------- COMPARTIR WHATSAPP ----------
+function compartirWhatsApp() {
+  const url = window.location.href;
+  const texto = `🌍 Mira este producto interactivo sobre el Consejo de Seguridad de la ONU: ${url}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank");
+}
+
+// ---------- FLIP CARDS ----------
+const flipGrid = document.getElementById("flipGrid");
+permanentes.forEach(m => {
+  const card = document.createElement("div");
+  card.className = "flip-card";
+  card.innerHTML = `
+    <div class="flip-inner">
+      <div class="flip-front">
+        <div class="bandera">${m.bandera}</div>
+        <div class="nombre">${m.nombre}</div>
+        <div class="pista">Toca para voltear</div>
+      </div>
+      <div class="flip-back">${m.info}</div>
+    </div>`;
+  card.addEventListener("click", () => card.classList.toggle("volteada"));
+  flipGrid.appendChild(card);
+});
+
+// ---------- NO PERMANENTES ----------
+const contNP = document.getElementById("noPerm");
+noPermanentes.forEach(n => {
+  const d = document.createElement("div");
+  d.className = "np";
+  d.textContent = n;
+  contNP.appendChild(d);
+});
+
+// ---------- CONTADORES ----------
+function actualizarContadores() {
+  document.getElementById("contVetos").textContent = totalVetos;
+  document.getElementById("contPaises").textContent = paisesQueVetaron.size;
+}
+cargar();
+actualizarContadores();
+
+// ---------- SIMULADOR ----------
+const rangeSi = document.getElementById("rangeSi");
+const rangeNo = document.getElementById("rangeNo");
+
+function renderVotosVisual() {
+  const si = parseInt(rangeSi.value);
+  const no = parseInt(rangeNo.value);
+  document.getElementById("lblSi").textContent = si;
+  document.getElementById("lblNo").textContent = no;
+  const cont = document.getElementById("votosVisual");
+  cont.innerHTML = "";
+  for (let i = 0; i < si; i++) {
+    const d = document.createElement("div");
+    d.className = "voto-punto si";
+    d.textContent = "S";
+    cont.appendChild(d);
+  }
+  for (let i = 0; i < no; i++) {
+    const d = document.createElement("div");
+    d.className = "voto-punto no";
+    d.textContent = "N";
+    cont.appendChild(d);
+  }
+  vetosSimulador.forEach(p => {
+    const d = document.createElement("div");
+    d.className = "voto-punto veto";
+    d.textContent = "V";
+    d.title = p;
+    cont.appendChild(d);
+  });
+  evaluarResultado();
+}
+
+function evaluarResultado() {
+  const si = parseInt(rangeSi.value);
+  const no = parseInt(rangeNo.value);
+  const res = document.getElementById("resultado");
+  if (vetosSimulador.length > 0) {
+    res.className = "resultado rechazada";
+    res.innerHTML = `🚫 <strong>RECHAZADA por veto</strong> de ${vetosSimulador.join(", ")}. Aunque había ${si} votos a favor, el veto bloquea todo.`;
+  } else if (si >= 9) {
+    res.className = "resultado aprobada";
+    res.innerHTML = `✅ <strong>APROBADA</strong> con ${si} votos a favor y ${no} en contra. Ningún permanente vetó.`;
+  } else {
+    res.className = "resultado rechazada";
+    res.innerHTML = `❌ <strong>NO APROBADA</strong>: se necesitan al menos 9 votos a favor. Solo hay ${si}.`;
+  }
+}
+
+rangeSi.addEventListener("input", renderVotosVisual);
+rangeNo.addEventListener("input", renderVotosVisual);
+
+function renderBotonesVeto() {
+  const cont = document.getElementById("botonesVeto");
+  cont.innerHTML = "";
+  permanentes.forEach(p => {
+    const b = document.createElement("button");
+    b.className = "btn rojo";
+    b.textContent = `${p.bandera} ${p.nombre} veta`;
+    b.addEventListener("click", () => {
+      if (!vetosSimulador.includes(p.nombre)) {
+        vetosSimulador.push(p.nombre);
+        totalVetos++;
+        paisesQueVetaron.add(p.nombre);
+        actualizarContadores();
+        renderVotosVisual();
+        guardar();
+        toast(`🚫 ${p.nombre} ejerció el veto`, "rojo");
+        verificarInsignia();
+      } else {
+        toast(`${p.nombre} ya vetó esta resolución`);
+      }
+    });
+    cont.appendChild(b);
+  });
+}
+
+function reiniciarSimulador() {
+  vetosSimulador = [];
+  rangeSi.value = 9;
+  rangeNo.value = 6;
+  renderVotosVisual();
+  toast("Votación reiniciada", "");
+}
+
+renderVotosVisual();
+renderBotonesVeto();
+
+// ---------- RETO DIPLOMÁTICO ----------
+const retos = [
+  {
+    escenario: "Eres el representante de un país permanente. Se presenta una resolución para enviar ayuda humanitaria a una zona de conflicto, pero tu aliado estratégico se opone.",
+    opciones: [
+      { texto: "Vetar la resolución", tipo: "mal", consec: "La ayuda no llega. Miles de civiles quedan desprotegidos. La comunidad internacional te critica." },
+      { texto: "Abstenerte", tipo: "bien", consec: "La resolución se aprueba con 9 votos. La ayuda llega y mantienes tu relación con el aliado." },
+      { texto: "Votar a favor", tipo: "bien", consec: "La ayuda se envía. Tu aliado se molesta, pero ganas prestigio humanitario." }
+    ]
+  },
+  {
+    escenario: "Se vota una resolución que condena el uso de armas químicas por parte de un gobierno. Tú representas a un miembro permanente que tiene intereses económicos con ese gobierno.",
+    opciones: [
+      { texto: "Vetar para proteger intereses", tipo: "mal", consec: "La resolución se bloquea. Las víctimas quedan sin justicia y tu imagen se deteriora." },
+      { texto: "Abstenerte y permitir la condena", tipo: "bien", consec: "La resolución pasa. La presión internacional aumenta sobre el gobierno y tú quedas bien posicionado." },
+      { texto: "Votar a favor con reservas", tipo: "bien", consec: "La condena se aprueba. Demuestras compromiso con el derecho internacional." }
+    ]
+  },
+  {
+    escenario: "Una resolución pide crear una misión de paz en un país donde tu gobierno tiene tropas. Tu voto puede cambiar el resultado.",
+    opciones: [
+      { texto: "Vetar la misión", tipo: "mal", consec: "La misión no se despliega. El conflicto se prolonga y la ONU queda debilitada." },
+      { texto: "Apoyar la misión", tipo: "bien", consec: "La misión se aprueba. La paz avanza y tu país gana credibilidad multilateral." },
+      { texto: "Negociar condiciones y votar a favor", tipo: "bien", consec: "La misión se aprueba con tus condiciones. Equilibrio entre intereses y paz." }
+    ]
+  }
+];
+
+let retoActual = 0;
+function renderReto() {
+  const r = retos[retoActual];
+  document.getElementById("escenarioReto").textContent = r.escenario;
+  const cont = document.getElementById("opcionesReto");
+  cont.innerHTML = "";
+  const cons = document.getElementById("consecuenciaReto");
+  cons.className = "consecuencia";
+  cons.textContent = "";
+  r.opciones.forEach(op => {
+    const b = document.createElement("button");
+    b.className = "btn";
+    b.textContent = op.texto;
+    b.addEventListener("click", () => {
+      cons.textContent = op.consec;
+      cons.className = "consecuencia visible " + (op.tipo === "bien" ? "bien" : "mal");
+      if (op.tipo === "bien") toast("✅ Buena decisión diplomática", "verde");
+      else toast("⚠️ Decisión cuestionada internacionalmente", "rojo");
+      retoCompletado = true;
+      guardar();
+      verificarInsignia();
+      setTimeout(() => {
+        retoActual = (retoActual + 1) % retos.length;
+        renderReto();
+      }, 4000);
+    });
+    cont.appendChild(b);
+  });
+}
+renderReto();
+
+// ---------- TIMELINE CON FILTROS ----------
+const autoresUnicos = [...new Set(vetosFamosos.map(v => v.autor))];
+const filtrosCont = document.getElementById("filtros");
+const filtroTodos = document.createElement("button");
+filtroTodos.className = "filtro activo";
+filtroTodos.textContent = "Todos";
+filtroTodos.addEventListener("click", () => filtrarTimeline("Todos"));
+filtrosCont.appendChild(filtroTodos);
+autoresUnicos.forEach(a => {
+  const b = document.createElement("button");
+  b.className = "filtro";
+  b.textContent = a;
+  b.addEventListener("click", () => filtrarTimeline(a));
+  filtrosCont.appendChild(b);
+});
+
+const contTimeline = document.getElementById("timeline");
+vetosFamosos.forEach(e => {
+  const d = document.createElement("div");
+  d.className = "evento";
+  d.dataset.autor = e.autor;
+  d.innerHTML = `<div class="anio">${e.anio}</div><div class="titulo">${e.titulo}</div><div>${e.texto}</div><div class="autor">Veto de: ${e.autor}</div>`;
+  contTimeline.appendChild(d);
+});
+
+function filtrarTimeline(autor) {
+  document.querySelectorAll(".filtro").forEach(f => f.classList.toggle("activo", f.textContent === autor));
+  document.querySelectorAll(".evento").forEach(ev => {
+    ev.classList.toggle("oculto", autor !== "Todos" && ev.dataset.autor !== autor);
+  });
+  timelineVista = true;
+  guardar();
+  verificarInsignia();
+}
+
+// ---------- QUIZ (10 preguntas) ----------
+const preguntas = [
+  { p: "¿Cuántos miembros tiene el Consejo de Seguridad?", opciones: ["10", "15", "20", "5"], correcta: 1, exp: "15: 5 permanentes y 10 no permanentes." },
+  { p: "¿Cuántos miembros permanentes hay?", opciones: ["3", "5", "10", "15"], correcta: 1, exp: "Son 5: China, Francia, Rusia, Reino Unido y EE. UU." },
+  { p: "¿Cuántos miembros no permanentes hay?", opciones: ["5", "10", "15", "20"], correcta: 1, exp: "Son 10, elegidos por la Asamblea General." },
+  { p: "¿Qué ocurre si un permanente se abstiene?", opciones: ["Cuenta como veto", "Se bloquea", "Puede aprobarse con 9 votos", "Se repite"], correcta: 2, exp: "La abstención no es veto; la resolución puede aprobarse." },
+  { p: "¿Las decisiones del Consejo son obligatorias?", opciones: ["No", "Sí, son vinculantes", "Solo si votaste a favor", "Depende"], correcta: 1, exp: "Son vinculantes según la Carta de la ONU." },
+  { p: "¿Cuántos votos a favor se necesitan para aprobar una resolución?", opciones: ["5", "9", "15", "Mayoría simple"], correcta: 1, exp: "Se necesitan al menos 9 votos a favor de 15." },
+  { p: "¿Quién puede usar el veto?", opciones: ["Cualquier miembro", "Solo los 5 permanentes", "El Secretario General", "La Asamblea"], correcta: 1, exp: "Solo los 5 miembros permanentes tienen veto." },
+  { p: "¿Cuánto dura el mandato de un miembro no permanente?", opciones: ["1 año", "2 años", "5 años", "Indefinido"], correcta: 1, exp: "Los no permanentes duran 2 años." },
+  { p: "¿En qué año se creó el Consejo de Seguridad?", opciones: ["1919", "1945", "1960", "2000"], correcta: 1, exp: "Se creó en 1945 con la Carta de la ONU." },
+  { p: "¿Qué país ha usado más el veto en la historia reciente?", opciones: ["EE. UU.", "Rusia (URSS)", "Francia", "China"], correcta: 1, exp: "Rusia (como URSS) es el que más vetos ha usado." }
+];
+
+const contQuiz = document.getElementById("quiz");
+const preguntasRespondidas = new Set();
+
+preguntas.forEach((q, i) => {
+  const div = document.createElement("div");
+  div.className = "pregunta";
+  div.innerHTML = `<p>${i+1}. ${q.p}</p>`;
+  const opDiv = document.createElement("div");
+  opDiv.className = "opciones";
+  q.opciones.forEach((op, j) => {
+    const b = document.createElement("button");
+    b.className = "opcion";
+    b.textContent = op;
+    b.addEventListener("click", () => {
+      if (opDiv.dataset.resp === "1") return;
+      opDiv.dataset.resp = "1";
+      preguntasRespondidas.add(i);
+      if (j === q.correcta) {
+        b.classList.add("correcta");
+        puntajeQuiz++;
+        toast("✅ ¡Correcto!", "verde");
+        const fb = document.createElement("div");
+        fb.className = "feedback ok";
+        fb.textContent = "✅ " + q.exp;
+        div.appendChild(fb);
+      } else {
+        b.classList.add("incorrecta");
+        opDiv.children[q.correcta].classList.add("correcta");
+        toast("❌ Incorrecto", "rojo");
+        const fb = document.createElement("div");
+        fb.className = "feedback mal";
+        fb.textContent = "❌ " + q.exp;
+        div.appendChild(fb);
+      }
+      actualizarProgreso();
+      guardar();
+    });
+    opDiv.appendChild(b);
+  });
+  div.appendChild(opDiv);
+  contQuiz.appendChild(div);
+});
+
+function actualizarProgreso() {
+  const total = preguntas.length;
+  const hechas = preguntasRespondidas.size;
+  document.getElementById("progresoBar").style.width = (hechas/total*100) + "%";
+  document.getElementById("puntaje").textContent = `Aciertos: ${puntajeQuiz} / ${total}`;
+  if (hechas === total) {
+    quizCompletado = true;
+    const rq = document.getElementById("resultadoQuiz");
+    rq.classList.add("visible");
+    if (puntajeQuiz === total) { rq.className = "resultado-quiz visible excelente"; rq.textContent = "🥇 ¡Perfecto! Eres un experto en el Consejo de Seguridad."; toast("🏆 ¡Quiz perfecto!", "oro"); }
+    else if (puntajeQuiz >= total*0.6) { rq.className = "resultado-quiz visible bien"; rq.textContent = `👍 Buen trabajo: ${puntajeQuiz}/${total}. Repasa los fallos.`; }
+    else { rq.className = "resultado-quiz visible mal"; rq.textContent = `📚 ${puntajeQuiz}/${total}. Vuelve a leer la guía y reintenta.`; }
+    guardar();
+    verificarInsignia();
+  }
+}
+
+// ---------- INSIGNIA ----------
+function verificarInsignia() {
+  if (insigniaMostrada) return;
+  if (quizCompletado && totalVetos >= 1 && timelineVista && retoCompletado) {
+    insigniaMostrada = true;
+    guardar();
+    const ins = document.getElementById("insignia");
+    ins.classList.add("visible");
+    toast("🏅 ¡Has desbloqueado la insignia de Diplomático Experto!", "oro");
+    setTimeout(() => ins.classList.remove("visible"), 6000);
+  }
+}
+
+if (puntajeQuiz > 0) {
+  document.getElementById("puntaje").textContent = `Aciertos: ${puntajeQuiz} / ${preguntas.length}`;
+}
+</script>
+</body>
+</html>
